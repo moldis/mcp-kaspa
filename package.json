@@ -1,0 +1,39 @@
+{
+  "name": "mcp-kaspa",
+  "version": "0.1.0",
+  "description": "MCP server for Kaspa node RPC integration",
+  "author": "Artem Bogomaz",
+  "license": "MIT",
+  "mcp": {
+    "name": "kaspa-mcp-server",
+    "description": "Interact with Kaspa blockchain node via RPC",
+    "tools": [
+      {
+        "name": "get_node_info",
+        "description": "Get Kaspa node information and connection status"
+      },
+      {
+        "name": "get_block_by_hash",
+        "description": "Get detailed information about a specific block by its hash"
+      },
+      {
+        "name": "get_latest_daa",
+        "description": "Get the latest DAA (Difficulty Adjustment Algorithm) score"
+      },
+      {
+        "name": "get_block_dag_info",
+        "description": "Get comprehensive BlockDAG information"
+      }
+    ],
+    "resources": [
+      {
+        "uri": "kaspa://status",
+        "description": "Server status and configuration"
+      },
+      {
+        "uri": "kaspa://docs/examples",
+        "description": "Usage examples"
+      }
+    ]
+  }
+}
