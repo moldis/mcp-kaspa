@@ -36,34 +36,64 @@ DEBUG=false
 
 ### Running the server
 
+#### Docker (Recommended)
 ```bash
+# Build the image
+./docker-build.sh
+
+# The server is ready for Claude Desktop
+```
+
+#### Manual Python
+```bash
+./setup.sh  # Install dependencies
 python main.py
 ```
 
 ### Connecting to AI Assistants
 
-#### Claude Desktop
+#### Claude Desktop with Docker (Recommended)
 
-1. Open Claude Desktop settings
-2. Navigate to Developer → Model Context Protocol
-3. Add a new MCP server with the following configuration:
+1. Build the Docker image: `./docker-build.sh`
+2. Open Claude Desktop settings
+3. Navigate to Developer → Model Context Protocol
+4. Add this configuration:
 
 ```json
 {
   "mcpServers": {
     "kaspa": {
-      "command": "python",
-      "args": ["main.py"],
-      "env": {
-        "KASPA_RPC_URL": "kaspa-rpc-node-url",
-      }
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--env", "KASPA_RPC_URL=http://host.docker.internal:16110",
+        "kaspa-mcp-server:latest"
+      ]
     }
   }
 }
 ```
 
-4. Restart Claude Desktop
-5. The Kaspa tools will be available in your conversations
+5. Restart Claude Desktop
+6. The Kaspa tools will be available in your conversations
+
+#### Claude Desktop with Python
+
+```json
+{
+  "mcpServers": {
+    "kaspa": {
+      "command": "/Users/artem_bogomaz/Documents/GIT2/mcp-kaspa/venv/bin/python",
+      "args": ["/Users/artem_bogomaz/Documents/GIT2/mcp-kaspa/main.py"],
+      "env": {
+        "KASPA_RPC_URL": "http://localhost:16110"
+      }
+    }
+  }
+}
+```
 
 #### Other MCP-Compatible Clients
 
@@ -88,28 +118,32 @@ For other AI assistants that support MCP:
 
 ### Available Tools
 
+#### Node Information
 1. **get_node_info** - Get Kaspa node information and connection status
 2. **get_block_by_hash** - Get detailed information about a specific block by its hash
 3. **get_latest_daa** - Get the latest DAA (Difficulty Adjustment Algorithm) score
 4. **get_block_dag_info** - Get comprehensive BlockDAG information
 
+#### Address Operations
+5. **validate_address** - Validate Kaspa address format and network type
+6. **get_address_balance** - Get balance for a specific Kaspa address
+7. **get_address_utxos** - Get UTXOs (Unspent Transaction Outputs) for addresses
+8. **get_mempool_transactions** - Get pending transactions in mempool for specific addresses
+
 ### Example Usage
 
 ```python
-# Get node information
+# Node operations
 node_info = get_node_info()
-
-# Get block by hash
-block = get_block_by_hash("0000000000000000000000000000000000000000000000000000000000000000")
-
-# Get block with transactions
-block_with_tx = get_block_by_hash("0000000000000000000000000000000000000000000000000000000000000000", True)
-
-# Get latest DAA score
+block = get_block_by_hash("block_hash_here")
 daa = get_latest_daa()
-
-# Get BlockDAG info
 dag_info = get_block_dag_info()
+
+# Address operations
+validation = validate_address("kaspa:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjsgzthw5j")
+balance = get_address_balance("kaspa:qpauqsvk7yf9unexwmxsnmg547mhyga37csh0kj53q6xxgl24ydxjsgzthw5j")
+utxos = get_address_utxos(["kaspa:address1", "kaspa:address2"])
+mempool_txs = get_mempool_transactions(["kaspa:address1"])
 ```
 
 ## MCP Resources

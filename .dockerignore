@@ -1,0 +1,45 @@
+# Virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Development files
+.env
+*.log
+*.tmp
+
+# Test files
+test_*.py
+*_test.py
+diagnose.py
+debug_mcp.py
+simple_test.py
+
+# Documentation
+README.md
+TROUBLESHOOTING.md
+*.md
+
+# Scripts
+*.sh
+launcher.py
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data directory
+kaspa_mcp_data/
+
+# Git
+.git/
+.gitignore
+
+# macOS
+.DS_Store
