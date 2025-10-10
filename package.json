@@ -4,9 +4,26 @@
   "description": "MCP server for Kaspa node RPC integration",
   "author": "Artem Bogomaz",
   "license": "MIT",
+  "keywords": ["mcp", "kaspa", "blockchain", "rpc", "server"],
+  "homepage": "https://github.com/your-username/mcp-kaspa",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/mcp-kaspa.git"
+  },
+  "main": "src/main.py",
+  "scripts": {
+    "start": "uvx --from . kaspa-mcp-server",
+    "docker:build": "docker build -t kaspa-mcp-server:latest .",
+    "docker:run": "docker run -i --rm --env KASPA_RPC_URL=http://localhost:16110 kaspa-mcp-server:latest"
+  },
   "mcp": {
     "name": "kaspa-mcp-server",
     "description": "Interact with Kaspa blockchain node via RPC",
+    "command": "uvx",
+    "args": ["--from", ".", "kaspa-mcp-server"],
+    "env": {
+      "KASPA_RPC_URL": "http://localhost:16110"
+    },
     "tools": [
       {
         "name": "get_node_info",

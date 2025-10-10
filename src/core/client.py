@@ -1,6 +1,7 @@
 import aiohttp
 import json
 import re
+import asyncio
 from typing import Dict, Any, Optional, List
 
 
@@ -8,6 +9,7 @@ class KaspaClient:
     def __init__(self, rpc_url: str):
         self.rpc_url = rpc_url
         self.headers = {"Content-Type": "application/json"}
+        self.timeout = aiohttp.ClientTimeout(total=30, connect=10)
     
     async def _rpc_call(self, method: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Make RPC call to Kaspa node"""
@@ -18,18 +20,25 @@ class KaspaClient:
             "params": params or []
         }
         
-        async with aiohttp.ClientSession() as session:
-            async with session.post(self.rpc_url, json=payload, headers=self.headers) as response:
-                if response.status != 200:
-                    text = await response.text()
-                    raise Exception(f"RPC call failed with status {response.status}: {text}")
-                
-                result = await response.json()
-                
-                if "error" in result and result["error"]:
-                    raise Exception(f"RPC error: {result['error']}")
-                
-                return result.get("result", {})
+        try:
+            async with aiohttp.ClientSession(timeout=self.timeout) as session:
+                async with session.post(self.rpc_url, json=payload, headers=self.headers) as response:
+                    if response.status != 200:
+                        text = await response.text()
+                        raise Exception(f"RPC call failed with status {response.status}: {text}")
+                    
+                    result = await response.json()
+                    
+                    if "error" in result and result["error"]:
+                        raise Exception(f"RPC error: {result['error']}")
+                    
+                    return result.get("result", {})
+        except asyncio.TimeoutError:
+            raise Exception(f"RPC call to {self.rpc_url} timed out after 30 seconds")
+        except aiohttp.ClientError as e:
+            raise Exception(f"Network error connecting to {self.rpc_url}: {e}")
+        except Exception as e:
+            raise Exception(f"RPC call failed: {e}")
     
     async def get_info(self) -> Dict[str, Any]:
         """Get node information"""

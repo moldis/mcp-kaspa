@@ -10,6 +10,7 @@ import asyncio
 import json
 import logging
 import sys
+import signal
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence
 
@@ -26,8 +27,11 @@ from mcp.server.models import InitializationOptions
 import mcp.server.stdio
 import mcp.types as types
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+# Set up logging with more detailed format
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger("kaspa-mcp-server")
 
 # Initialize the MCP server
@@ -35,6 +39,14 @@ server = Server("kaspa-mcp-server")
 
 # Global Kaspa client
 kaspa_client: Optional[KaspaClient] = None
+
+# Signal handler for graceful shutdown
+def signal_handler(signum, frame):
+    logger.info(f"🛑 Received signal {signum}, shutting down gracefully...")
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 
 def get_kaspa_client() -> KaspaClient:
@@ -478,36 +490,66 @@ get_block_dag_info()
         raise ValueError(f"Unknown resource: {uri}")
 
 
-async def main():
-    """Main server entry point"""
-    # Configuration validation
-    logger.info("🔧 Validating configuration...")
-    
-    if not config.kaspa_rpc_url:
-        logger.warning("❌ KASPA_RPC_URL not set. Using default: http://localhost:16110")
-        config.kaspa_rpc_url = "http://localhost:16110"
-    
-    logger.info(f"✅ Configuration valid")
-    logger.info(f"🔗 Kaspa RPC: {config.kaspa_rpc_url}")
-    
-    if config.debug:
-        logger.info(f"🔍 Debug mode enabled")
+def main():
+    """Entry point for the application"""
+    try:
+        asyncio.run(async_main())
+    except KeyboardInterrupt:
+        logger.info("🛑 Server shutdown requested")
+    except Exception as e:
+        logger.error(f"❌ Unhandled exception: {e}")
+        sys.exit(1)
 
-    # Run the server using stdio transport
-    async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
-        await server.run(
-            read_stream,
-            write_stream,
-            InitializationOptions(
-                server_name="kaspa-mcp-server",
-                server_version="0.1.0",
-                capabilities=server.get_capabilities(
-                    notification_options=NotificationOptions(),
-                    experimental_capabilities={},
+
+async def async_main():
+    """Main server entry point"""
+    try:
+        # Configuration validation
+        logger.info("🔧 Validating configuration...")
+        
+        if not config.kaspa_rpc_url:
+            logger.warning("❌ KASPA_RPC_URL not set. Using default: http://localhost:16110")
+            config.kaspa_rpc_url = "http://localhost:16110"
+        
+        logger.info(f"✅ Configuration valid")
+        logger.info(f"🔗 Kaspa RPC: {config.kaspa_rpc_url}")
+        
+        if config.debug:
+            logger.info(f"🔍 Debug mode enabled")
+
+        # Test Kaspa connection before starting MCP server
+        logger.info("🔍 Testing Kaspa RPC connection...")
+        try:
+            client = get_kaspa_client()
+            await client.get_info()
+            logger.info("✅ Kaspa RPC connection successful")
+        except Exception as e:
+            logger.error(f"❌ Failed to connect to Kaspa RPC: {e}")
+            logger.error("MCP server will start but Kaspa functionality may be limited")
+
+        logger.info("🚀 Starting MCP server...")
+
+        # Run the server using stdio transport
+        async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
+            await server.run(
+                read_stream,
+                write_stream,
+                InitializationOptions(
+                    server_name="kaspa-mcp-server",
+                    server_version="0.1.0",
+                    capabilities=server.get_capabilities(
+                        notification_options=NotificationOptions(),
+                        experimental_capabilities={},
+                    ),
                 ),
-            ),
-        )
+            )
+    except Exception as e:
+        logger.error(f"❌ Fatal error during server startup: {e}")
+        logger.error(f"Error type: {type(e).__name__}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

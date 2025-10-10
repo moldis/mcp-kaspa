@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kaspa-mcp-server"
+version = "0.1.0"
+description = "MCP server for Kaspa blockchain node RPC integration"
+authors = [{name = "Artem Bogomaz", email = "artem@example.com"}]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "mcp>=1.0.0",
+    "aiohttp>=3.8.0",
+    "python-dotenv>=1.0.0"
+]
+
+[project.scripts]
+kaspa-mcp-server = "src.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+"*" = ["*.py"]

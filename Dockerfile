@@ -14,8 +14,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY main.py .
-COPY core/ ./core/
+COPY src/ ./src/
+COPY pyproject.toml .
+COPY requirements.txt .
 
 # Create a non-root user
 RUN useradd --create-home --shell /bin/bash mcp
@@ -23,10 +24,10 @@ USER mcp
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV KASPA_RPC_URL=http://localhost:16110
+ENV KASPA_RPC_URL=http://23.111.147.178:16110
 
 # Expose port (not needed for stdio but good for documentation)
 EXPOSE 8000
 
 # Run the MCP server
-CMD ["python", "main.py"]
+CMD ["python", "-m", "src.main"]
