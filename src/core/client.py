@@ -1,96 +1,81 @@
-import aiohttp
-import json
 import re
-import asyncio
 from typing import Dict, Any, Optional, List
+from kaspad_client import KaspadClient as PyKaspadClient
 
 
 class KaspaClient:
     def __init__(self, rpc_url: str):
         self.rpc_url = rpc_url
-        self.headers = {"Content-Type": "application/json"}
-        self.timeout = aiohttp.ClientTimeout(total=30, connect=10)
-    
-    async def _rpc_call(self, method: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Make RPC call to Kaspa node"""
-        payload = {
-            "jsonrpc": "1.0",
-            "id": "kaspa-mcp",
-            "method": method,
-            "params": params or []
-        }
+        # Extract host and port from URL
+        # Format: http://host:port or https://host:port
+        url_parts = rpc_url.replace('http://', '').replace('https://', '').split(':')
+        self.host = url_parts[0]
+        self.port = int(url_parts[1]) if len(url_parts) > 1 else 16110
         
-        try:
-            async with aiohttp.ClientSession(timeout=self.timeout) as session:
-                async with session.post(self.rpc_url, json=payload, headers=self.headers) as response:
-                    if response.status != 200:
-                        text = await response.text()
-                        raise Exception(f"RPC call failed with status {response.status}: {text}")
-                    
-                    result = await response.json()
-                    
-                    if "error" in result and result["error"]:
-                        raise Exception(f"RPC error: {result['error']}")
-                    
-                    return result.get("result", {})
-        except asyncio.TimeoutError:
-            raise Exception(f"RPC call to {self.rpc_url} timed out after 30 seconds")
-        except aiohttp.ClientError as e:
-            raise Exception(f"Network error connecting to {self.rpc_url}: {e}")
-        except Exception as e:
-            raise Exception(f"RPC call failed: {e}")
+        # Initialize the py-kaspad-client
+        self.client = PyKaspadClient(self.host, self.port)
     
     async def get_info(self) -> Dict[str, Any]:
         """Get node information"""
-        return await self._rpc_call("getInfoRequest")
+        response = await self.client.get_info()
+        # The kaspad-client already returns dict
+        return response if response else {}
     
     async def get_block(self, block_hash: str, include_transactions: bool = False) -> Dict[str, Any]:
         """Get block by hash"""
-        params = {
-            "hash": block_hash,
-            "includeTransactions": include_transactions
-        }
-        return await self._rpc_call("getBlockRequest", params)
+        response = await self.client.get_block(block_hash, include_transactions)
+        return response if response else {}
     
     async def get_block_dag_info(self) -> Dict[str, Any]:
         """Get BlockDAG information"""
-        return await self._rpc_call("getBlockDagInfoRequest")
+        response = await self.client.get_block_dag_info()
+        return response if response else {}
     
     async def get_virtual_selected_parent_blue_score(self) -> Dict[str, Any]:
         """Get the blue score of virtual selected parent (DAA score)"""
-        return await self._rpc_call("getVirtualSelectedParentBlueScoreRequest")
+        response = await self.client.get_virtual_selected_parent_blue_score()
+        return response if response else {}
     
     async def get_balance_by_address(self, address: str) -> Dict[str, Any]:
         """Get balance for a specific address"""
-        params = {"address": address}
-        return await self._rpc_call("getBalanceByAddressRequest", params)
+        response = await self.client.get_balance_by_address(address)
+        return response if response else {}
     
     async def get_balances_by_addresses(self, addresses: list[str]) -> Dict[str, Any]:
         """Get balances for multiple addresses"""
-        params = {"addresses": addresses}
-        return await self._rpc_call("getBalancesByAddressesRequest", params)
+        response = await self.client.get_balances_by_addresses(addresses)
+        return response if response else {}
     
     async def get_utxos_by_addresses(self, addresses: list[str]) -> Dict[str, Any]:
         """Get UTXOs for specific addresses"""
-        params = {"addresses": addresses}
-        return await self._rpc_call("getUtxosByAddressesRequest", params)
+        response = await self.client.get_utxos_by_addresses(addresses)
+        return response if response else {}
     
-    async def get_mempool_entries_by_addresses(self, addresses: list[str], include_orphan_pool: bool = True, filter_transaction_pool: bool = True) -> Dict[str, Any]:
+    async def get_mempool_entries_by_addresses(
+        self, 
+        addresses: list[str], 
+        include_orphan_pool: bool = True, 
+        filter_transaction_pool: bool = True
+    ) -> Dict[str, Any]:
         """Get mempool entries for specific addresses"""
-        params = {
-            "addresses": addresses,
-            "includeOrphanPool": include_orphan_pool,
-            "filterTransactionPool": filter_transaction_pool
-        }
-        return await self._rpc_call("getMempoolEntriesByAddressesRequest", params)
+        response = await self.client.get_mempool_entries_by_addresses(
+            addresses, 
+            include_orphan_pool=include_orphan_pool,
+            filter_transaction_pool=filter_transaction_pool
+        )
+        return response if response else {}
     
-    async def get_mempool_entries(self, include_orphan_pool: bool = True, filter_transaction_pool: bool = True) -> Dict[str, Any]:
+    async def get_mempool_entries(
+        self, 
+        include_orphan_pool: bool = True, 
+        filter_transaction_pool: bool = True
+    ) -> Dict[str, Any]:
         """Get all mempool entries"""
-        params = {
-            "includeOrphanPool": include_orphan_pool,
-            "filterTransactionPool": filter_transaction_pool
-        }
-        return await self._rpc_call("getMempoolEntriesRequest", params)
+        response = await self.client.get_mempool_entries(
+            include_orphan_pool=include_orphan_pool,
+            filter_transaction_pool=filter_transaction_pool
+        )
+        return response if response else {}
     
     @staticmethod
     def validate_kaspa_address(address: str) -> Dict[str, Any]:
