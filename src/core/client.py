@@ -33,8 +33,18 @@ class KaspaClient:
     
     async def get_virtual_selected_parent_blue_score(self) -> Dict[str, Any]:
         """Get the blue score of virtual selected parent (DAA score)"""
-        response = await self.client.get_virtual_selected_parent_blue_score()
-        return response if response else {}
+        # kaspad-client doesn't have this specific method, so we get it from block_dag_info
+        dag_info = await self.client.get_block_dag_info()
+        if dag_info and 'getBlockDagInfoResponse' in dag_info:
+            virtual_daa_score = dag_info['getBlockDagInfoResponse'].get('virtualDaaScore')
+            # Format it similar to the expected response
+            return {
+                'id': dag_info.get('id'),
+                'getVirtualSelectedParentBlueScoreResponse': {
+                    'blueScore': virtual_daa_score
+                }
+            }
+        return dag_info if dag_info else {}
     
     async def get_balance_by_address(self, address: str) -> Dict[str, Any]:
         """Get balance for a specific address"""
