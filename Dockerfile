@@ -26,7 +26,6 @@ USER mcp
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV KASPA_RPC_URL=http://23.111.147.178:16110
 
 # Expose port (not needed for stdio but good for documentation)
 EXPOSE 8000

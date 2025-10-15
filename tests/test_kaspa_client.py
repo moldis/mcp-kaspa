@@ -106,7 +106,7 @@ if PYTEST_AVAILABLE:
     @pytest.fixture
     def kaspa_client():
         """Create a KaspaClient instance for testing"""
-        return KaspaClient("http://23.111.147.178:16110")
+        return KaspaClient(kaspa_node_url)
     
     @pytest.mark.asyncio
     async def test_get_node_info_pytest(kaspa_client):

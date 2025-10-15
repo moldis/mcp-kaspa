@@ -173,7 +173,6 @@ docker run -i --rm --env KASPA_RPC_URL=http://your-kaspa-node:16110 kaspa-mcp-se
 - Docker: `http://host.docker.internal:16110`
 
 **Public Endpoints** (examples):
-- `http://23.111.147.178:16110`
 - `https://kaspa-rpc.example.com`
 
 ### Environment Variables
