@@ -3,7 +3,7 @@
 Kaspa MCP Server - MCP Server
 MCP server for Kaspa node RPC integration
 
-Author: Artem Bogomaz <artem@example.com>
+Author: Artem Bogomaz <artembogomaz@gmail.com>
 Version: 0.1.0
 """
 import asyncio
