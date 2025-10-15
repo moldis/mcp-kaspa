@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "kaspa-mcp-server"
 version = "0.1.0"
 description = "MCP server for Kaspa blockchain node RPC integration"
-authors = [{name = "Artem Bogomaz", email = "artem@example.com"}]
+authors = [{name = "Artem Bogomaz", email = "artembogomaz@gmail.com"}]
 license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.8"
