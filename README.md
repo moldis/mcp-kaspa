@@ -46,12 +46,14 @@ Add to your Claude Desktop configuration file:
       "args": [
         "run", "-i", "--rm",
         "--env", "KASPA_RPC_URL=http://host.docker.internal:16110",
-        "kaspa-mcp-server:latest"
+        "ghcr.io/moldis/mcp-kaspa:latest"
       ]
     }
   }
 }
 ```
+
+
 
 ## 🖥️ Cursor IDE
 
@@ -85,12 +87,14 @@ Add to your Cursor settings:
       "args": [
         "run", "-i", "--rm",
         "--env", "KASPA_RPC_URL=http://host.docker.internal:16110",
-        "kaspa-mcp-server:latest"
+        "ghcr.io/moldis/mcp-kaspa:latest"
       ]
     }
   }
 }
 ```
+
+
 
 ## 🎯 Qoder IDE
 
@@ -119,7 +123,9 @@ Add this MCP server in Qoder settings:
   - `--rm`
   - `--env`
   - `KASPA_RPC_URL=http://host.docker.internal:16110`
-  - `kaspa-mcp-server:latest`
+  - `ghcr.io/yourusername/mcp-kaspa:latest`
+
+
 
 ### Method 3: Direct Python (Fallback)
 If uvx doesn't work:
@@ -141,21 +147,35 @@ If uvx doesn't work:
 
 ## 🐳 Docker Support
 
-### Build the Docker Image
+### Using Pre-built Image from GitHub Container Registry
+
+The easiest way to use the Docker image is to pull it directly from GitHub Container Registry:
 
 ```bash
-cd /path/to/mcp-kaspa
-docker build -t kaspa-mcp-server:latest .
+# Pull the latest image
+docker pull ghcr.io/moldis/mcp-kaspa:latest
+
+# Or pull a specific version
+docker pull ghcr.io/moldis/mcp-kaspa:v1.0.0
 ```
 
 ### Run with Docker
 
 ```bash
 # Test with a local Kaspa node
-docker run -i --rm --env KASPA_RPC_URL=http://host.docker.internal:16110 kaspa-mcp-server:latest
+docker run -i --rm --env KASPA_RPC_URL=http://host.docker.internal:16110 ghcr.io/moldis/mcp-kaspa:latest
 
 # Test with a remote Kaspa node
-docker run -i --rm --env KASPA_RPC_URL=http://your-kaspa-node:16110 kaspa-mcp-server:latest
+docker run -i --rm --env KASPA_RPC_URL=http://your-kaspa-node:16110 ghcr.io/moldis/mcp-kaspa:latest
+```
+
+### Build the Docker Image Locally (Optional)
+
+If you prefer to build the image yourself:
+
+```bash
+cd /path/to/mcp-kaspa
+docker build -t kaspa-mcp-server:latest .
 ```
 
 ### Docker Notes
@@ -163,6 +183,7 @@ docker run -i --rm --env KASPA_RPC_URL=http://your-kaspa-node:16110 kaspa-mcp-se
 - Use `host.docker.internal` instead of `localhost` when connecting to services on your host machine
 - The Docker image includes all necessary dependencies
 - Perfect for isolated execution environments
+- Images are automatically built and published on every tag push via GitHub Actions
 
 ## 🌍 Network Configuration
 
@@ -200,10 +221,13 @@ docker run -i --rm --env KASPA_RPC_URL=http://your-kaspa-node:16110 kaspa-mcp-se
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/moldis/mcp-kaspa.git
 cd mcp-kaspa
 
-# Build Docker image (optional)
+# Pull pre-built Docker image (recommended)
+docker pull ghcr.io/moldis/mcp-kaspa:latest
+
+# OR build Docker image locally (optional)
 docker build -t kaspa-mcp-server:latest .
 ```
 
@@ -243,7 +267,7 @@ docker build -t kaspa-mcp-server:latest .
 
 2. **Test Docker setup**:
    ```bash
-   docker run -i --rm --env KASPA_RPC_URL=http://localhost:16110 kaspa-mcp-server:latest
+   docker run -i --rm --env KASPA_RPC_URL=http://localhost:16110 ghcr.io/moldis/mcp-kaspa:latest
    ```
 
 3. **Check server response**:
