@@ -76,12 +76,26 @@ class KaspaClient:
         return response if response else {}
     
     async def get_mempool_entries(
-        self, 
-        include_orphan_pool: bool = True, 
+        self,
+        include_orphan_pool: bool = True,
         filter_transaction_pool: bool = True
     ) -> Dict[str, Any]:
         """Get all mempool entries"""
         response = await self.client.get_mempool_entries(
+            include_orphan_pool=include_orphan_pool,
+            filter_transaction_pool=filter_transaction_pool
+        )
+        return response if response else {}
+
+    async def get_mempool_entry(
+        self,
+        tx_id: str,
+        include_orphan_pool: bool = True,
+        filter_transaction_pool: bool = True
+    ) -> Dict[str, Any]:
+        """Get a specific transaction from mempool by transaction ID"""
+        response = await self.client.get_mempool_entry(
+            tx_id=tx_id,
             include_orphan_pool=include_orphan_pool,
             filter_transaction_pool=filter_transaction_pool
         )

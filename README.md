@@ -206,11 +206,12 @@ docker build -t kaspa-mcp-server:latest .
 1. **get_node_info** - Get Kaspa node information and connection status
 2. **get_block_by_hash** - Get detailed information about a specific block by its hash
 3. **get_latest_daa** - Get the latest DAA (Difficulty Adjustment Algorithm) score
-4. **get_block_dag_info** - Get comprehensive BlockDAG information  
+4. **get_block_dag_info** - Get comprehensive BlockDAG information
 5. **validate_address** - Validate a Kaspa address format
 6. **get_address_balance** - Get balance for a specific Kaspa address
 7. **get_address_utxos** - Get UTXOs (Unspent Transaction Outputs) for specific addresses
 8. **get_mempool_transactions** - Get mempool transactions for specific addresses
+9. **get_transaction_by_hash_mempool** - Get a specific transaction from mempool by hash (mempool only, not blockchain history)
 
 ## 📚 Resources
 
@@ -305,6 +306,11 @@ get_address_balance("kaspa:your_address_here")
 ### Get UTXOs
 ```
 get_address_utxos(["kaspa:address1", "kaspa:address2"])
+```
+
+### Get Transaction from Mempool
+```
+get_transaction_by_hash_mempool("transaction_hash_here")
 ```
 
 ## 📚 Additional Resources

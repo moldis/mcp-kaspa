@@ -170,6 +170,30 @@ async def handle_list_tools() -> list[types.Tool]:
                 "required": ["addresses"],
             },
         ),
+        types.Tool(
+            name="get_transaction_by_hash_mempool",
+            description="Get a specific transaction from mempool by its transaction hash/ID (mempool only, not from blockchain history)",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "tx_hash": {
+                        "type": "string",
+                        "description": "The transaction hash/ID to retrieve from mempool",
+                    },
+                    "include_orphan_pool": {
+                        "type": "boolean",
+                        "description": "Include transactions from orphan pool",
+                        "default": True,
+                    },
+                    "filter_transaction_pool": {
+                        "type": "boolean",
+                        "description": "Filter transaction pool",
+                        "default": True,
+                    },
+                },
+                "required": ["tx_hash"],
+            },
+        ),
     ]
 
 
@@ -359,7 +383,7 @@ async def handle_call_tool(
         elif name == "get_mempool_transactions":
             addresses = arguments.get("addresses", [])
             include_orphan_pool = arguments.get("include_orphan_pool", True)
-            
+
             if not addresses:
                 return [
                     types.TextContent(
@@ -370,14 +394,14 @@ async def handle_call_tool(
                         }, indent=2)
                     )
                 ]
-            
+
             # Validate all addresses
             invalid_addresses = []
             for addr in addresses:
                 validation = client.validate_kaspa_address(addr)
                 if not validation.get("valid"):
                     invalid_addresses.append(f"{addr}: {validation.get('error')}")
-            
+
             if invalid_addresses:
                 return [
                     types.TextContent(
@@ -389,7 +413,7 @@ async def handle_call_tool(
                         }, indent=2)
                     )
                 ]
-            
+
             result = await client.get_mempool_entries_by_addresses(addresses, include_orphan_pool)
             return [
                 types.TextContent(
@@ -398,6 +422,38 @@ async def handle_call_tool(
                         "status": "success",
                         "addresses": addresses,
                         "mempool_transactions": result,
+                    }, indent=2)
+                )
+            ]
+
+        elif name == "get_transaction_by_hash_mempool":
+            tx_hash = arguments.get("tx_hash")
+            include_orphan_pool = arguments.get("include_orphan_pool", True)
+            filter_transaction_pool = arguments.get("filter_transaction_pool", True)
+
+            if not tx_hash:
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps({
+                            "status": "error",
+                            "message": "tx_hash is required"
+                        }, indent=2)
+                    )
+                ]
+
+            result = await client.get_mempool_entry(
+                tx_hash,
+                include_orphan_pool,
+                filter_transaction_pool
+            )
+            return [
+                types.TextContent(
+                    type="text",
+                    text=json.dumps({
+                        "status": "success",
+                        "tx_hash": tx_hash,
+                        "transaction": result,
                     }, indent=2)
                 )
             ]
@@ -456,6 +512,7 @@ async def handle_read_resource(uri: str) -> str:
 - `get_address_balance` - Get balance for specific address
 - `get_address_utxos` - Get UTXOs for addresses
 - `get_mempool_transactions` - Get mempool transactions by address
+- `get_transaction_by_hash_mempool` - Get specific transaction from mempool by hash
 
 ## Configuration
 - Debug Mode: {'✅' if config.debug else '❌'}
