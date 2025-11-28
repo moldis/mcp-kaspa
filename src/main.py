@@ -53,7 +53,7 @@ def get_kaspa_client() -> KaspaClient:
     """Get or create Kaspa client instance"""
     global kaspa_client
     if kaspa_client is None:
-        kaspa_client = KaspaClient(config.kaspa_rpc_url)
+        kaspa_client = KaspaClient(config.kaspa_rpc_url, config.kasfyi_api_key, config.kasfyi_base_url, config.kasfyi_rate_limit)
     return kaspa_client
 
 
@@ -192,6 +192,39 @@ async def handle_list_tools() -> list[types.Tool]:
                     },
                 },
                 "required": ["tx_hash"],
+            },
+        ),
+        types.Tool(
+            name="get_blocks_by_blue_score_range",
+            description="Get blocks by blue score range from kas.fyi API (max 100 blocks per request)",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "blue_score_start": {
+                        "type": "integer",
+                        "description": "Starting blue score value (inclusive)",
+                    },
+                    "blue_score_end": {
+                        "type": "integer",
+                        "description": "Ending blue score value (inclusive, max range 100 blocks)",
+                    },
+                    "chain_blocks_only": {
+                        "type": "boolean",
+                        "description": "Filter for only Virtual Selected Parent Chain blocks",
+                        "default": False,
+                    },
+                    "include_transactions": {
+                        "type": "boolean",
+                        "description": "Include transaction details",
+                        "default": False,
+                    },
+                    "include_payload": {
+                        "type": "boolean",
+                        "description": "Include transaction payload (only when include_transactions is true)",
+                        "default": False,
+                    },
+                },
+                "required": ["blue_score_start", "blue_score_end"],
             },
         ),
     ]
@@ -458,6 +491,43 @@ async def handle_call_tool(
                 )
             ]
 
+        elif name == "get_blocks_by_blue_score_range":
+            blue_score_start = arguments.get("blue_score_start")
+            blue_score_end = arguments.get("blue_score_end")
+            chain_blocks_only = arguments.get("chain_blocks_only", False)
+            include_transactions = arguments.get("include_transactions", False)
+            include_payload = arguments.get("include_payload", False)
+
+            if blue_score_start is None or blue_score_end is None:
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=json.dumps({
+                            "status": "error",
+                            "message": "blue_score_start and blue_score_end are required"
+                        }, indent=2)
+                    )
+                ]
+
+            result = await client.get_blocks_by_blue_score_range(
+                blue_score_start,
+                blue_score_end,
+                chain_blocks_only,
+                include_transactions,
+                include_payload
+            )
+            return [
+                types.TextContent(
+                    type="text",
+                    text=json.dumps({
+                        "status": "success",
+                        "blue_score_start": blue_score_start,
+                        "blue_score_end": blue_score_end,
+                        "data": result,
+                    }, indent=2)
+                )
+            ]
+
         else:
             raise ValueError(f"Unknown tool: {name}")
 
@@ -513,6 +583,7 @@ async def handle_read_resource(uri: str) -> str:
 - `get_address_utxos` - Get UTXOs for addresses
 - `get_mempool_transactions` - Get mempool transactions by address
 - `get_transaction_by_hash_mempool` - Get specific transaction from mempool by hash
+- `get_blocks_by_blue_score_range` - Get blocks by blue score range (kas.fyi API)
 
 ## Configuration
 - Debug Mode: {'✅' if config.debug else '❌'}

@@ -1,19 +1,24 @@
 import re
+import aiohttp
+import asyncio
+import time
 from typing import Dict, Any, Optional, List
 from kaspad_client import KaspadClient as PyKaspadClient
 
 
 class KaspaClient:
-    def __init__(self, rpc_url: str):
+    def __init__(self, rpc_url: str, kasfyi_api_key: Optional[str] = None, kasfyi_base_url: str = "https://api.kas.fyi", kasfyi_rate_limit: float = 1.0):
         self.rpc_url = rpc_url
-        # Extract host and port from URL
-        # Format: http://host:port or https://host:port
         url_parts = rpc_url.replace('http://', '').replace('https://', '').split(':')
         self.host = url_parts[0]
         self.port = int(url_parts[1]) if len(url_parts) > 1 else 16110
         
-        # Initialize the py-kaspad-client
         self.client = PyKaspadClient(self.host, self.port)
+        
+        self.kasfyi_api_key = kasfyi_api_key
+        self.kasfyi_base_url = kasfyi_base_url
+        self.kasfyi_rate_limit = kasfyi_rate_limit
+        self.kasfyi_last_request_time = 0.0
     
     async def get_info(self) -> Dict[str, Any]:
         """Get node information"""
@@ -100,6 +105,49 @@ class KaspaClient:
             filter_transaction_pool=filter_transaction_pool
         )
         return response if response else {}
+    
+    async def get_blocks_by_blue_score_range(
+        self,
+        blue_score_start: int,
+        blue_score_end: int,
+        chain_blocks_only: bool = False,
+        include_transactions: bool = False,
+        include_payload: bool = False
+    ) -> Dict[str, Any]:
+        """Get blocks by blue score range from kas.fyi API"""
+        if not self.kasfyi_api_key:
+            raise ValueError("KASFYI_API_KEY environment variable is required for kas.fyi API access")
+        
+        if blue_score_end - blue_score_start > 100:
+            raise ValueError("Blue score range cannot exceed 100 blocks")
+        
+        current_time = time.time()
+        time_since_last_request = current_time - self.kasfyi_last_request_time
+        min_interval = 1.0 / self.kasfyi_rate_limit
+        
+        if time_since_last_request < min_interval:
+            await asyncio.sleep(min_interval - time_since_last_request)
+        
+        url = f"{self.kasfyi_base_url}/v1/blocks/blue-score/{blue_score_start}/{blue_score_end}"
+        
+        params = {
+            "chain_blocks_only": str(chain_blocks_only).lower(),
+            "include_transactions": str(include_transactions).lower(),
+            "include_payload": str(include_payload).lower()
+        }
+        
+        headers = {
+            "x-api-key": self.kasfyi_api_key
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params, headers=headers) as response:
+                self.kasfyi_last_request_time = time.time()
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    error_text = await response.text()
+                    raise Exception(f"kas.fyi API error (HTTP {response.status}): {error_text}")
     
     @staticmethod
     def validate_kaspa_address(address: str) -> Dict[str, Any]:
