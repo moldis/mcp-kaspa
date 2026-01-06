@@ -227,6 +227,25 @@ async def handle_list_tools() -> list[types.Tool]:
                 "required": ["blue_score_start", "blue_score_end"],
             },
         ),
+        types.Tool(
+            name="estimate_network_hashes_per_second",
+            description="Estimate the network hashing power in hashes per second",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "start_hash": {
+                        "type": "string",
+                        "description": "Optional starting block hash for the estimation window",
+                    },
+                    "window_size": {
+                        "type": "integer",
+                        "description": "Number of blocks to use for estimation",
+                        "default": 1000,
+                    },
+                },
+                "required": [],
+            },
+        ),
     ]
 
 
@@ -524,6 +543,21 @@ async def handle_call_tool(
                         "blue_score_start": blue_score_start,
                         "blue_score_end": blue_score_end,
                         "data": result,
+                    }, indent=2)
+                )
+            ]
+
+        elif name == "estimate_network_hashes_per_second":
+            start_hash = arguments.get("start_hash")
+            window_size = arguments.get("window_size", 1000)
+            
+            result = await client.estimate_network_hashes_per_second(start_hash, window_size)
+            return [
+                types.TextContent(
+                    type="text",
+                    text=json.dumps({
+                        "status": "success",
+                        "network_hashes_per_second": result,
                     }, indent=2)
                 )
             ]
