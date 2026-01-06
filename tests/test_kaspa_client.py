@@ -100,6 +100,59 @@ class TestKaspaClient:
         
         return result
 
+    async def test_estimate_network_hashes_per_second(self):
+        kaspa_client = self.get_client()
+
+        test_cases = [
+            {
+                "name": "default_window_size_no_start_hash",
+                "start_hash": None,
+                "window_size": 1000,
+            },
+            {
+                "name": "custom_window_size_no_start_hash",
+                "start_hash": None,
+                "window_size": 500,
+            },
+            {
+                "name": "small_window_size",
+                "start_hash": None,
+                "window_size": 100,
+            },
+        ]
+
+        results = []
+        for test_case in test_cases:
+            print(f"\n  📋 Running scenario: {test_case['name']}")
+            print(f"     start_hash: {test_case['start_hash']}")
+            print(f"     window_size: {test_case['window_size']}")
+
+            result = await kaspa_client.estimate_network_hashes_per_second(
+                start_hash=test_case['start_hash'],
+                window_size=test_case['window_size']
+            )
+
+            assert result is not None, f"Result should not be None for scenario: {test_case['name']}"
+            assert isinstance(result, dict), f"Result should be a dictionary for scenario: {test_case['name']}"
+
+            if 'estimateNetworkHashesPerSecondResponse' in result:
+                response_data = result['estimateNetworkHashesPerSecondResponse']
+                if 'networkHashesPerSecond' in response_data:
+                    hashes_per_second = response_data['networkHashesPerSecond']
+                    print(f"     ✓ Network hashes per second: {hashes_per_second}")
+                    assert hashes_per_second is not None, f"Network hashes per second should not be None for scenario: {test_case['name']}"
+
+            results.append({
+                "test_case": test_case['name'],
+                "result": result
+            })
+            print(f"     ✓ Scenario passed: {test_case['name']}")
+
+        print(f"\n✅ Successfully tested {len(test_cases)} scenarios for estimate_network_hashes_per_second")
+        print(f"   Response keys from first test: {list(results[0]['result'].keys())}")
+
+        return results
+
 
 # Pytest fixtures (only used if pytest is available)
 if PYTEST_AVAILABLE:
@@ -114,6 +167,12 @@ if PYTEST_AVAILABLE:
         test = TestKaspaClient()
         test.get_client = lambda: kaspa_client
         await test.test_get_node_info()
+
+    @pytest.mark.asyncio
+    async def test_estimate_network_hashes_per_second_pytest(kaspa_client):
+        test = TestKaspaClient()
+        test.get_client = lambda: kaspa_client
+        await test.test_estimate_network_hashes_per_second()
 
 
 if __name__ == "__main__":
@@ -157,7 +216,17 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"❌ Test 3 FAILED: {e}")
             tests_failed += 1
-        
+
+        # Test 4: estimate_network_hashes_per_second
+        try:
+            print("\n🔍 Test 4: Estimating network hashes per second...")
+            result = await test.test_estimate_network_hashes_per_second()
+            print("✅ Test 4 PASSED")
+            tests_passed += 1
+        except Exception as e:
+            print(f"❌ Test 4 FAILED: {e}")
+            tests_failed += 1
+
         # Summary
         print("\n" + "=" * 60)
         print("Test Summary")

@@ -149,6 +149,24 @@ class KaspaClient:
                     error_text = await response.text()
                     raise Exception(f"kas.fyi API error (HTTP {response.status}): {error_text}")
     
+    async def estimate_network_hashes_per_second(self, start_hash: Optional[str] = None, window_size: int = 1000) -> Dict[str, Any]:
+        """
+        Estimate network hashes per second using kaspad RPC.
+        Proto: EstimateNetworkHashesPerSecondRequestMessage
+        """
+        params = {
+            "windowSize": window_size
+        }
+        if start_hash:
+            params["startHash"] = start_hash
+
+        response = await self.client.request(
+            "estimateNetworkHashesPerSecondRequest",
+            params,
+            wait_for_response=True
+        )
+        return response if response else {}
+    
     @staticmethod
     def validate_kaspa_address(address: str) -> Dict[str, Any]:
         """
